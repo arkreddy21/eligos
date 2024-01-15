@@ -1,7 +1,51 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"github.com/arkreddy21/eligos/internal/http"
+	"log"
+	"os"
+	"os/signal"
+)
 
 func main() {
-	fmt.Println("eligos")
+	ctx, cancel := context.WithCancel(context.Background())
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() { <-c; cancel() }()
+
+	app := newApp()
+	app.run()
+	fmt.Println("app started")
+
+	// Wait for interrupt signal.
+	<-ctx.Done()
+	fmt.Println("\napp stopped")
+	// Clean up program.
+	if err := app.close(); err != nil {
+		log.Fatal("failed to shutdown gracefully: ", err)
+	}
+}
+
+type App struct {
+	HTTPServer *http.Server
+}
+
+func newApp() *App {
+	return &App{
+		HTTPServer: http.NewServer(),
+	}
+}
+
+func (app *App) run() {
+	app.HTTPServer.Open()
+}
+
+func (app *App) close() error {
+	err := app.HTTPServer.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
