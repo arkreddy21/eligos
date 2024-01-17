@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/arkreddy21/eligos/internal/http"
+	"github.com/arkreddy21/eligos/internal/postgres"
 	"log"
 	"os"
 	"os/signal"
@@ -29,6 +30,7 @@ func main() {
 }
 
 type App struct {
+	DB         *postgres.DB
 	HTTPServer *http.Server
 }
 
@@ -39,6 +41,7 @@ func newApp() *App {
 }
 
 func (app *App) run() {
+	app.DB = postgres.NewDB()
 	app.HTTPServer.Open()
 }
 
@@ -46,6 +49,9 @@ func (app *App) close() error {
 	err := app.HTTPServer.Close()
 	if err != nil {
 		return err
+	}
+	if app.DB != nil {
+		app.DB.Close()
 	}
 	return nil
 }
