@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/arkreddy21/eligos"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log"
@@ -14,6 +15,9 @@ import (
 type Server struct {
 	server *http.Server
 	router *chi.Mux
+
+	//database services
+	UserService eligos.UserServiceI
 }
 
 func NewServer() *Server {

@@ -42,6 +42,7 @@ func newApp() *App {
 
 func (app *App) run() {
 	app.DB = postgres.NewDB()
+	app.HTTPServer.UserService = postgres.NewUserService(app.DB)
 	app.HTTPServer.Open()
 }
 
