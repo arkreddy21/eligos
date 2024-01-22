@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/arkreddy21/eligos"
@@ -8,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -106,4 +108,28 @@ func createToken(issuer string, key []byte) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func (s *Server) validateJwt(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		const BearerSchema = "Bearer "
+		authHeader := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authHeader, BearerSchema) {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("user unauthorized"))
+			return
+		}
+		authToken := authHeader[len(BearerSchema):]
+		token, err := jwt.ParseWithClaims(authToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return s.jwtKey, nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("user unauthorized"))
+			return
+		}
+		claims := token.Claims.(*jwt.RegisteredClaims)
+		ctx := context.WithValue(r.Context(), "userId", claims.Issuer)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

@@ -52,6 +52,11 @@ func NewServer() *Server {
 
 	s.router.Route("/api/auth", s.authRoutes)
 
+	s.router.Group(func(r chi.Router) {
+		r.Use(s.validateJwt)
+
+	})
+
 	return s
 }
 
