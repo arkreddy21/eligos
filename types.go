@@ -16,3 +16,15 @@ type UserServiceI interface {
 	GetUser(email string) (*User, error)
 	GetUserById(id uuid.UUID) (*User, error)
 }
+
+type Space struct {
+	Id   uuid.UUID
+	Name string
+}
+
+type SpaceServiceI interface {
+	CreateSpace(space *Space) error
+	AddUserById(userid, spaceid uuid.UUID) error
+	RemoveUserById(userid, spaceid uuid.UUID) error
+	DeleteSpaceById(spaceid uuid.UUID) error
+}

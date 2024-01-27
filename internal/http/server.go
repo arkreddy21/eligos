@@ -21,7 +21,8 @@ type Server struct {
 	jwtKey []byte
 
 	//database services
-	UserService eligos.UserServiceI
+	UserService  eligos.UserServiceI
+	SpaceService eligos.SpaceServiceI
 }
 
 func NewServer() *Server {

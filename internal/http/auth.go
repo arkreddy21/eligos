@@ -51,7 +51,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := json.Marshal(map[string]any{
 		"message": "success",
-		"jwt":     token,
+		"token":   token,
 	})
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
