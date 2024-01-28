@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arkreddy21/eligos"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type UserService struct {
@@ -36,4 +37,21 @@ func (s *UserService) GetUserById(id uuid.UUID) (*eligos.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *UserService) GetSpaces(userid uuid.UUID) (*[]eligos.Space, error) {
+	rows, err := s.db.dbpool.Query(context.Background(), "SELECT s.id, s.name FROM spaces s JOIN userspaces us ON s.id = us.spaceid WHERE us.userid=$1", userid)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	spaces, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (eligos.Space, error) {
+		var space eligos.Space
+		err := row.Scan(&space.Id, &space.Name)
+		return space, err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &spaces, nil
 }

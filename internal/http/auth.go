@@ -7,6 +7,7 @@ import (
 	"github.com/arkreddy21/eligos"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
@@ -41,6 +42,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if !CheckPasswordHash(password, user.Password) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("password incorrect"))
+		return
 	}
 
 	token, err := createToken(user.Id.String(), s.jwtKey)
@@ -86,6 +88,20 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("register successful"))
+}
+
+func (s *Server) handleUser(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userId").(string)
+	uid, _ := uuid.Parse(userId)
+	user, err := s.UserService.GetUserById(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user not found"))
+		return
+	}
+	jsonResp, _ := json.Marshal(user)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(jsonResp)
 }
 
 func HashPassword(password string) (string, error) {

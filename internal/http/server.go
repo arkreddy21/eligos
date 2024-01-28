@@ -47,15 +47,14 @@ func NewServer() *Server {
 		MaxAge:           300,
 	}))
 
-	s.router.Get("/api/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
-	})
-
 	s.router.Route("/api/auth", s.authRoutes)
 
 	s.router.Group(func(r chi.Router) {
 		r.Use(s.validateJwt)
-
+		r.Get("/api/ping", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("pong"))
+		})
+		r.Get("/api/user", s.handleUser)
 	})
 
 	return s
