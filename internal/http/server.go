@@ -55,6 +55,7 @@ func NewServer() *Server {
 			w.Write([]byte("pong"))
 		})
 		r.Get("/api/user", s.handleUser)
+		r.Route("/api/space", s.spaceRoutes)
 	})
 
 	return s
