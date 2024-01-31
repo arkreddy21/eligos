@@ -2,6 +2,7 @@ package eligos
 
 import (
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type User struct {
@@ -28,4 +29,16 @@ type SpaceServiceI interface {
 	AddUserById(userid, spaceid uuid.UUID) error
 	RemoveUserById(userid, spaceid uuid.UUID) error
 	DeleteSpaceById(spaceid uuid.UUID) error
+}
+
+type Message struct {
+	Id        uuid.UUID          `json:"id"`
+	UserId    uuid.UUID          `json:"userid"`
+	SpaceId   uuid.UUID          `json:"spaceid"`
+	Body      string             `json:"body"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+}
+
+type MessageServiceI interface {
+	CreateMessage(m *Message) error
 }
