@@ -50,8 +50,35 @@ func (s *Server) handleCreateSpace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAddUserToSpace(w http.ResponseWriter, r *http.Request) {
-	//TODO: implement
-	//parse input json request with user email and space id
+	var body struct {
+		Email   string
+		SpaceId uuid.UUID
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	err := dec.Decode(&body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	user, err := s.UserService.GetUser(body.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user not found"))
+		return
+	}
+	err = s.SpaceService.AddUserById(user.Id, body.SpaceId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to add user to space"))
+		return
+	}
+	response, err := json.Marshal(map[string]string{
+		"status": "ok",
+	})
+	w.Write(response)
 }
 
 // returns all spaces that a user belongs to

@@ -28,6 +28,7 @@ type SpaceServiceI interface {
 	CreateSpace(space *Space, userid uuid.UUID) error
 	AddUserById(userid, spaceid uuid.UUID) error
 	RemoveUserById(userid, spaceid uuid.UUID) error
+	GetUsersInSpace(spaceid uuid.UUID) (*[]User, error)
 	DeleteSpaceById(spaceid uuid.UUID) error
 }
 

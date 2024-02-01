@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arkreddy21/eligos"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type SpaceService struct {
@@ -27,6 +28,23 @@ func (s *SpaceService) CreateSpace(space *eligos.Space, userid uuid.UUID) error 
 func (s *SpaceService) AddUserById(userid, spaceid uuid.UUID) error {
 	_, err := s.db.dbpool.Exec(context.Background(), "INSERT INTO userspaces VALUES ($1, $2)", userid, spaceid)
 	return err
+}
+
+func (s *SpaceService) GetUsersInSpace(spaceid uuid.UUID) (*[]eligos.User, error) {
+	rows, err := s.db.dbpool.Query(context.Background(), "SELECT u.id, u.name, u.email FROM users u JOIN userspaces us ON u.id=us.userid WHERE us.spaceid=$1", spaceid)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	users, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (eligos.User, error) {
+		var user eligos.User
+		err := row.Scan(&user.Id, &user.Name, &user.Email)
+		return user, err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &users, nil
 }
 
 func (s *SpaceService) RemoveUserById(userid, spaceid uuid.UUID) error {
