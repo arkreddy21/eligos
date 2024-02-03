@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS userspaces
 
 CREATE TABLE IF NOT EXISTS messages
 (
-    id      uuid primary key,
-    userid  uuid        not null references users (id),
-    spaceid uuid        not null references spaces (id),
-    body    text        not null,
-    created timestamptz not null
+    id        uuid primary key,
+    userid    uuid        not null references users (id),
+    spaceid   uuid        not null references spaces (id),
+    body      text        not null,
+    createdat timestamptz not null
 );

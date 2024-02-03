@@ -18,11 +18,15 @@ type Server struct {
 	server *http.Server
 	router *chi.Mux
 
+	//websocket hub
+	hub *Hub
+
 	jwtKey []byte
 
 	//database services
-	UserService  eligos.UserServiceI
-	SpaceService eligos.SpaceServiceI
+	UserService    eligos.UserServiceI
+	SpaceService   eligos.SpaceServiceI
+	MessageService eligos.MessageServiceI
 }
 
 func NewServer() *Server {
@@ -55,13 +59,18 @@ func NewServer() *Server {
 			w.Write([]byte("pong"))
 		})
 		r.Get("/api/user", s.handleUser)
+		r.Get("/api/ws", s.handleWs)
 		r.Route("/api/space", s.spaceRoutes)
 	})
+
+	//create a websocket hub
+	s.hub = newHub()
 
 	return s
 }
 
 func (s *Server) Open() {
+	go s.hub.run(s)
 	fmt.Println("listening on port 4000")
 	s.server = &http.Server{Addr: "0.0.0.0:4000", Handler: s.router}
 	go func() {
