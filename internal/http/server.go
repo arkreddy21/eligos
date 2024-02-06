@@ -52,6 +52,7 @@ func NewServer() *Server {
 	}))
 
 	s.router.Route("/api/auth", s.authRoutes)
+	s.router.Get("/api/ws", s.handleWs)
 
 	s.router.Group(func(r chi.Router) {
 		r.Use(s.validateJwt)
@@ -59,7 +60,6 @@ func NewServer() *Server {
 			w.Write([]byte("pong"))
 		})
 		r.Get("/api/user", s.handleUser)
-		r.Get("/api/ws", s.handleWs)
 		r.Route("/api/space", s.spaceRoutes)
 	})
 
