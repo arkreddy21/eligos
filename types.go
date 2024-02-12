@@ -42,4 +42,5 @@ type Message struct {
 
 type MessageServiceI interface {
 	CreateMessage(m *Message) error
+	GetMessages(spaceid uuid.UUID) (*[]Message, error)
 }

@@ -14,6 +14,8 @@ func (s *Server) spaceRoutes(r chi.Router) {
 	r.Post("/adduser", s.handleAddUserToSpace)
 	// returns all spaces that a user belongs to
 	r.Get("/spaces", s.handleGetSpaces)
+	// returns history of messages in a space
+	r.Get("/messages", s.handleGetMessages)
 }
 
 func (s *Server) handleCreateSpace(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +94,30 @@ func (s *Server) handleGetSpaces(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, _ := json.Marshal(*spaces)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
+
+func (s *Server) handleGetMessages(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["spaceid"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("spaceid not provided"))
+		return
+	}
+	spaceid, err := uuid.Parse(keys[0])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to parse body"))
+		return
+	}
+	messages, err := s.MessageService.GetMessages(spaceid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to get messages"))
+		return
+	}
+	response, _ := json.Marshal(*messages)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
