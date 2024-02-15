@@ -42,5 +42,10 @@ type Message struct {
 
 type MessageServiceI interface {
 	CreateMessage(m *Message) error
-	GetMessages(spaceid uuid.UUID) (*[]Message, error)
+	GetMessages(spaceid uuid.UUID) (*[]MessageWUser, error)
+}
+
+type MessageWUser struct {
+	Message
+	User User `json:"user"`
 }

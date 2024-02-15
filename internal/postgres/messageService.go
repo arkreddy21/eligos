@@ -23,15 +23,16 @@ func (s *MessageService) CreateMessage(m *eligos.Message) error {
 	return err
 }
 
-func (s *MessageService) GetMessages(spaceid uuid.UUID) (*[]eligos.Message, error) {
-	rows, err := s.db.dbpool.Query(context.Background(), "SELECT * FROM messages WHERE spaceid = $1 ORDER BY createdat", spaceid)
+func (s *MessageService) GetMessages(spaceid uuid.UUID) (*[]eligos.MessageWUser, error) {
+	rows, err := s.db.dbpool.Query(context.Background(), "SELECT messages.*, users.name, users.email FROM messages JOIN users ON messages.userid = users.id WHERE spaceid = $1 ORDER BY createdat", spaceid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	messages, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (eligos.Message, error) {
-		var message eligos.Message
-		err := row.Scan(&message.Id, &message.UserId, &message.SpaceId, &message.Body, &message.CreatedAt)
+	messages, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (eligos.MessageWUser, error) {
+		var message eligos.MessageWUser
+		err := row.Scan(&message.Id, &message.UserId, &message.SpaceId, &message.Body, &message.CreatedAt, &message.User.Name, &message.User.Email)
+		message.User.Id = message.UserId
 		return message, err
 	})
 	if err != nil {
