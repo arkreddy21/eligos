@@ -28,6 +28,12 @@ type Hub struct {
 	unregister chan uuid.UUID
 }
 
+type WsMessage struct {
+	Proto   string          `json:"proto"`
+	Spaceid uuid.UUID       `json:"spaceid"`
+	Payload json.RawMessage `json:"payload"`
+}
+
 func newHub() *Hub {
 	return &Hub{
 		clients:    make(map[uuid.UUID]*Client),
@@ -48,18 +54,23 @@ func (h *Hub) run(s *Server) {
 				delete(h.clients, clientid)
 			}
 		case message := <-h.broadcast:
-			m := &eligos.Message{}
-			err := json.Unmarshal(message, m)
+			var data WsMessage
+			err := json.Unmarshal(message, &data)
 			if err != nil {
-				fmt.Println("chat line 52: ", err)
+				continue
 			}
-			err = s.MessageService.CreateMessage(m)
+			res, err := handleRequest(data.Payload, data.Proto, s)
 			if err != nil {
-				fmt.Println("chat line 56: ", err)
+				continue
 			}
-			users, err := s.SpaceService.GetUsersInSpace(m.SpaceId)
+			response, err := json.Marshal(WsMessage{
+				Proto:   data.Proto,
+				Spaceid: data.Spaceid,
+				Payload: res,
+			})
+			users, err := s.SpaceService.GetUsersInSpace(data.Spaceid)
 			if err != nil {
-				fmt.Println("chat line 60: ", err)
+				continue
 			}
 			//TODO O(users x clients) not efficient
 			for _, user := range *users {
@@ -68,15 +79,38 @@ func (h *Hub) run(s *Server) {
 					// user is not connected
 					continue
 				}
-				//client.send <- message
+				//client.send <- response
 				select {
-				case client.send <- message:
+				case client.send <- response:
 				default:
 					close(client.send)
 					delete(h.clients, client.id)
 				}
 			}
 		}
+	}
+}
+
+// takes payload and proto from the websocket message and returns the appropriate payload to send back
+func handleRequest(payload json.RawMessage, proto string, s *Server) (json.RawMessage, error) {
+	switch proto {
+	case "message":
+		var m eligos.MessageWUser
+		err := json.Unmarshal(payload, &m)
+		if err != nil {
+			return nil, err
+		}
+		message, err := s.MessageService.CreateMessage(m)
+		if err != nil {
+			return nil, err
+		}
+		response, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+		return response, nil
+	default:
+		return nil, fmt.Errorf("unknown proto")
 	}
 }
 
