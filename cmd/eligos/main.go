@@ -45,6 +45,7 @@ func (app *App) run() {
 	app.HTTPServer.UserService = postgres.NewUserService(app.DB)
 	app.HTTPServer.SpaceService = postgres.NewSpaceService(app.DB)
 	app.HTTPServer.MessageService = postgres.NewMessageService(app.DB)
+	app.HTTPServer.InviteService = postgres.NewInviteService(app.DB)
 	app.HTTPServer.Open()
 }
 

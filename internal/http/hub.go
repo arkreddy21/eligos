@@ -28,9 +28,17 @@ type Hub struct {
 	unregister chan uuid.UUID
 }
 
+// WsMessage is to send/receive messages in a space
 type WsMessage struct {
 	Proto   string          `json:"proto"`
 	Spaceid uuid.UUID       `json:"spaceid"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+// WsNotification is to send notifications to a user
+type WsNotification struct {
+	Proto   string          `json:"proto"`
+	Userid  uuid.UUID       `json:"userid"`
 	Payload json.RawMessage `json:"payload"`
 }
 
@@ -111,6 +119,31 @@ func handleRequest(payload json.RawMessage, proto string, s *Server) (json.RawMe
 		return response, nil
 	default:
 		return nil, fmt.Errorf("unknown proto")
+	}
+}
+
+// SendMessageToUser sends message to a particular user outside of spaces.
+// useful for sending notifications, invites etc
+func (h *Hub) SendMessageToUser(userId uuid.UUID, proto string, payload []byte) {
+	client, ok := h.clients[userId]
+	if !ok {
+		return
+	}
+
+	res, err := json.Marshal(WsNotification{
+		Proto:   proto,
+		Userid:  userId,
+		Payload: payload,
+	})
+	if err != nil {
+		return
+	}
+
+	select {
+	case client.send <- res:
+	default:
+		close(client.send)
+		delete(h.clients, client.id)
 	}
 }
 

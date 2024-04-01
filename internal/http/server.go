@@ -27,6 +27,7 @@ type Server struct {
 	UserService    eligos.UserServiceI
 	SpaceService   eligos.SpaceServiceI
 	MessageService eligos.MessageServiceI
+	InviteService  eligos.InviteServiceI
 }
 
 func NewServer() *Server {
@@ -61,6 +62,7 @@ func NewServer() *Server {
 		})
 		r.Get("/api/user", s.handleUser)
 		r.Route("/api/space", s.spaceRoutes)
+		r.Route("/api/invite", s.inviteRoutes)
 	})
 
 	//create a websocket hub
