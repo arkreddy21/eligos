@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS spaces
 CREATE TABLE IF NOT EXISTS userspaces
 (
     userid  uuid not null references users (id),
-    spaceid uuid not null references spaces (id)
+    spaceid uuid not null references spaces (id),
+    UNIQUE (userid, spaceid)
 );
 
 CREATE TABLE IF NOT EXISTS messages
@@ -25,4 +26,13 @@ CREATE TABLE IF NOT EXISTS messages
     spaceid   uuid        not null references spaces (id),
     body      text        not null,
     createdat timestamptz not null
+);
+
+CREATE TABLE IF NOT EXISTS invites
+(
+    id        uuid primary key,
+    spaceid   uuid not null references spaces (id),
+    spaceName text not null,
+    email     text not null,
+    UNIQUE (spaceid, email)
 );

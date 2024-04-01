@@ -49,3 +49,16 @@ type MessageWUser struct {
 	Message
 	User User `json:"user"`
 }
+
+type Invite struct {
+	Id        uuid.UUID `json:"id"`
+	SpaceId   uuid.UUID `json:"spaceid"`
+	SpaceName string    `json:"spaceName"`
+	Email     string    `json:"email"`
+}
+
+type InviteServiceI interface {
+	CreateInvite(invite *Invite) error
+	DeleteInviteById(id uuid.UUID) error
+	GetInvitesByUser(email string) ([]Invite, error)
+}
